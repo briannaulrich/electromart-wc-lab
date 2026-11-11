@@ -16,6 +16,7 @@
   function plain(n) { return minus(dollarFmt.format(n)); }
   function days(n) { return minus(daysFmt.format(n)); }
   function signedDays(n) { return (n > 0 ? '+' : '') + days(n); }
+  function percent(rate) { return minus((rate * 100).toFixed(2)) + '%'; }
 
   const LABELS = {
     revenue: 'Revenue',
@@ -70,7 +71,7 @@
       ]);
       return tr;
     }));
-    document.getElementById('days-year').textContent = String(y);
+    document.querySelectorAll('.days-year').forEach(n => { n.textContent = String(y); });
   }
 
   function renderCash(result) {
@@ -129,6 +130,94 @@
     body.replaceChildren(...out);
   }
 
+  // ---------- Levers ----------
+
+  const LEVERS = ['dio', 'dso', 'dpo'];
+
+  function setupLevers(statements, assumptions, result) {
+    const num = k => document.getElementById(k + '-num');
+    const range = k => document.getElementById(k + '-range');
+    const text = (id, v) => { document.getElementById(id).textContent = v; };
+
+    // Slider range: 0 up to about twice the larger of Before and After, rounded up to 10.
+    LEVERS.forEach(k => {
+      const top = Math.max(result.before[k], result.after[k]);
+      range(k).max = String(Math.max(60, Math.ceil(top * 2 / 10) * 10));
+    });
+
+    // Labels that come from assumptions.csv.
+    text('bank-before', dollars(statements.before.notes_payable));
+    text('bank-rate', percent(assumptions.bank_rate));
+    text('disc-pct', minus(String(assumptions.supplier_discount * 100)) + '%');
+    text('disc-days', String(assumptions.discount_days));
+    document.querySelectorAll('.net-days').forEach(n => { n.textContent = String(assumptions.net_days); });
+    text('lever-ccc-before', 'Before: ' + days(result.before.ccc) + ' days · After: ' + days(result.after.ccc) + ' days');
+
+    // Current lever values, kept exact (never rounded).
+    const chosen = { dio: result.before.dio, dso: result.before.dso, dpo: result.before.dpo };
+
+    function update() {
+      const r = C.leverResults(statements, assumptions, chosen);
+      text('lever-ccc', days(r.ccc) + ' days');
+
+      const rows = [
+        ['Inventory', r.balances.inventory, r.freed.inventory, 'DIO × COGS'],
+        ['Receivables', r.balances.receivables, r.freed.receivables, 'DSO × revenue'],
+        ['Payables', r.balances.payables, r.freed.payables, 'DPO × COGS']
+      ];
+      document.getElementById('lever-body').replaceChildren(...rows.map(([name, bal, freed, how]) =>
+        el('tr', {}, [
+          rowHead(name, how + ' / ' + assumptions.days_in_year),
+          el('td', {}, [dollars(bal)]),
+          el('td', {}, [dollars(freed)])
+        ])));
+      document.getElementById('lever-foot').replaceChildren(el('tr', {}, [
+        el('th', { scope: 'row' }, ['Total']),
+        el('td', {}, ['']),
+        el('td', {}, [dollars(r.freed.total)])
+      ]));
+
+      text('lever-interest', dollars(r.interestSaved));
+      text('lever-late', days(r.daysPastDue) + ' days');
+      text('lever-discount', r.discountCost === null ? 'Takes the discount' : percent(r.discountCost));
+    }
+
+    // Show a value in both the slider and the number box.
+    function show(k) {
+      const v = chosen[k];
+      if (v > Number(range(k).max)) range(k).max = String(Math.ceil(v / 10) * 10);
+      range(k).value = String(v);
+      num(k).value = String(Number(v.toFixed(10))); // tidy floating-point tails like 36.50000000000001
+    }
+
+    function setAll(values) {
+      LEVERS.forEach(k => { chosen[k] = values[k]; show(k); });
+      update();
+    }
+
+    LEVERS.forEach(k => {
+      range(k).addEventListener('input', () => {
+        chosen[k] = Number(range(k).value);
+        num(k).value = days(chosen[k]).replace(/,/g, '');
+        update();
+      });
+      num(k).addEventListener('input', () => {
+        const v = Number(num(k).value);
+        if (num(k).value === '' || !Number.isFinite(v) || v < 0) return; // wait for a valid number
+        chosen[k] = v;
+        if (v > Number(range(k).max)) range(k).max = String(Math.ceil(v / 10) * 10);
+        range(k).value = String(v);
+        update();
+      });
+      num(k).addEventListener('change', () => show(k)); // on leaving the box, undo any bad entry
+    });
+
+    document.getElementById('set-before').addEventListener('click', () => setAll(result.before));
+    document.getElementById('set-after').addEventListener('click', () => setAll(result.after));
+
+    setAll(result.before);
+  }
+
   // ---------- Loading the data ----------
 
   async function fetchCSV(path) {
@@ -151,9 +240,10 @@
       renderDays(result);
       renderCash(result);
       renderData(statements, assumptions);
+      setupLevers(statements, assumptions, result);
 
       status.hidden = true;
-      ['days-section', 'cash-section', 'data-section'].forEach(id => {
+      ['days-section', 'cash-section', 'lever-section', 'data-section'].forEach(id => {
         document.getElementById(id).hidden = false;
       });
     } catch (err) {

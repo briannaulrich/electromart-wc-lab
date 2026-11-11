@@ -89,6 +89,65 @@ tfoot th, tfoot td { font-weight: 700; border-bottom: none; }
 .good { color: var(--good); }
 .bad { color: var(--bad); }
 
+/* Levers */
+.note.top { margin: 0 0 12px; }
+
+.buttons { display: flex; gap: 10px; margin-bottom: 14px; }
+button {
+  flex: 1;
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+  background: var(--card);
+  color: var(--accent);
+  cursor: pointer;
+}
+button:active { background: var(--accent); color: var(--card); }
+
+.lever {
+  display: grid;
+  grid-template-columns: 1fr 7.5rem;
+  gap: 4px 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.lever label { font-weight: 700; }
+.lever input[type="number"] {
+  width: 100%;
+  font: inherit;
+  text-align: right;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+}
+.lever input[type="range"] {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.big {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 8px;
+}
+.big span:first-child { font-weight: 600; }
+.big strong { font-size: 1.5rem; color: var(--accent); margin-left: auto; font-variant-numeric: tabular-nums; }
+.big .how { flex-basis: 100%; text-align: right; }
+
+.results { margin-top: 12px; }
+.results td { vertical-align: top; font-weight: 700; }
+
 summary { cursor: pointer; font-weight: 600; }
 details table { margin-top: 10px; }
 

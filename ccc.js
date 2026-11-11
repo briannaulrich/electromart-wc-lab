@@ -182,9 +182,59 @@
     };
   }
 
+  // ---------- Levers ----------
+
+  // The balance a number of days implies: days × annual COGS (or revenue) / days in the year.
+  function balanceFromDays(dayCount, annualAmount, days) { return dayCount * annualAmount / days; }
+
+  // Interest saved a year if the cash freed pays down the bank line.
+  // Only the line's Before balance can be paid down, so savings stop there.
+  // If cash freed is negative, ElectroMart borrows more, so the "saving" is negative.
+  function interestSaved(cashFreedTotal, bankLineBefore, rate) {
+    return Math.min(cashFreedTotal, bankLineBefore) * rate;
+  }
+
+  // Days paid past the net due date, never less than zero.
+  function daysPastDue(dpoDays, netDays) { return Math.max(0, dpoDays - netDays); }
+
+  // Nominal annual cost of skipping the supplier discount:
+  // d / (1 − d) × days in year / (days paid − discount days).
+  // Returns null when DPO is within the discount period (ElectroMart takes the discount).
+  function discountCost(d, dpoDays, discountDays, days) {
+    if (dpoDays <= discountDays) return null;
+    return d / (1 - d) * days / (dpoDays - discountDays);
+  }
+
+  // Everything the lever panel shows, for chosen DIO, DSO and DPO.
+  // Revenue and COGS stay at their Before values.
+  function leverResults(statements, assumptions, chosen) {
+    const b = statements.before;
+    const y = assumptions.days_in_year;
+    const inventory = balanceFromDays(chosen.dio, b.cogs, y);
+    const receivables = balanceFromDays(chosen.dso, b.revenue, y);
+    const payables = balanceFromDays(chosen.dpo, b.cogs, y);
+    const freed = {
+      inventory: b.inventory - inventory,
+      receivables: b.accounts_receivable - receivables,
+      payables: payables - b.accounts_payable
+    };
+    freed.total = freed.inventory + freed.receivables + freed.payables;
+    return {
+      ccc: ccc(chosen.dio, chosen.dso, chosen.dpo),
+      balances: { inventory, receivables, payables },
+      freed,
+      bankLineBefore: b.notes_payable,
+      interestSaved: interestSaved(freed.total, b.notes_payable, assumptions.bank_rate),
+      daysPastDue: daysPastDue(chosen.dpo, assumptions.net_days),
+      discountCost: discountCost(assumptions.supplier_discount, chosen.dpo,
+        assumptions.discount_days, y)
+    };
+  }
+
   const api = {
     parseCSV, readStatements, readAssumptions,
-    dio, dso, dpo, ccc, periodDays, cashFreed, analyze
+    dio, dso, dpo, ccc, periodDays, cashFreed, analyze,
+    balanceFromDays, interestSaved, daysPastDue, discountCost, leverResults
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api; // Node
