@@ -1,0 +1,12 @@
+section,item,before,after
+income_statement,revenue,10000000,10000000
+income_statement,cogs,6000000,6000000
+income_statement,operating_expenses,2500000,2500000
+asset,cash,300000,500000
+asset,accounts_receivable,900000,800000
+asset,inventory,1200000,600000
+asset,net_fixed_and_other_assets,2500000,2500000
+liability_or_equity,accounts_payable,600000,900000
+liability_or_equity,notes_payable,1200000,400000
+liability_or_equity,long_term_debt,1000000,1000000
+liability_or_equity,common_equity,2100000,2100000

@@ -1,0 +1,6 @@
+assumption,value,note
+days_in_year,365,This case uses 365 days (the class slides use 360)
+bank_rate,0.08,Annual interest rate on the bank line of credit (notes payable)
+supplier_discount,0.02,Supplier terms are 2/10 net 30: a 2% discount for paying early
+discount_days,10,The discount applies if ElectroMart pays within 10 days
+net_days,30,Otherwise the full amount is due in 30 days
