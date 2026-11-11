@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ElectroMart CCC</title>
+  <meta name="description" content="Cash conversion cycle calculator for the ElectroMart working capital case.">
+  <meta name="theme-color" content="#b3122e">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+</head>
+<body>
+  <header>
+    <h1>ElectroMart CCC</h1>
+    <p class="sub">How long a dollar is tied up in inventory and receivables, less the time suppliers wait to be paid.</p>
+  </header>
+
+  <main>
+    <p id="status" class="status" role="status">Loading the statements…</p>
+
+    <section id="days-section" hidden>
+      <h2>Cash conversion cycle</h2>
+      <table class="num">
+        <thead>
+          <tr><th scope="col">Measure</th><th scope="col">Before</th><th scope="col">After</th><th scope="col">Change</th></tr>
+        </thead>
+        <tbody id="days-body"></tbody>
+      </table>
+      <p class="note">CCC = DIO + DSO − DPO. Days use a <span class="days-year"></span>-day year.</p>
+    </section>
+
+    <section id="cash-section" hidden>
+      <h2>Cash freed by each lever</h2>
+      <table class="num">
+        <thead>
+          <tr><th scope="col">Lever</th><th scope="col">Cash freed</th><th scope="col">Check from days</th></tr>
+        </thead>
+        <tbody id="cash-body"></tbody>
+        <tfoot id="cash-foot"></tfoot>
+      </table>
+      <p class="note">Cash freed comes from the balance sheet: a drop in an asset frees cash, and a rise in accounts payable frees cash. The check column works it out again as days changed × annual COGS (or revenue) / days in the year. The two columns should match.</p>
+    </section>
+
+    <section id="lever-section" hidden>
+      <h2>Try the levers</h2>
+      <p class="note top">Move a slider or type a number of days. Revenue and COGS stay at their Before values.</p>
+      <div class="buttons">
+        <button type="button" id="set-before">Set to Before</button>
+        <button type="button" id="set-after">Set to After</button>
+      </div>
+
+      <div class="lever">
+        <label for="dio-range">DIO <span class="how">Inventory days</span></label>
+        <input type="number" id="dio-num" step="any" min="0" inputmode="decimal" aria-label="DIO days">
+        <input type="range" id="dio-range" step="any" min="0">
+      </div>
+      <div class="lever">
+        <label for="dso-range">DSO <span class="how">Collection days</span></label>
+        <input type="number" id="dso-num" step="any" min="0" inputmode="decimal" aria-label="DSO days">
+        <input type="range" id="dso-range" step="any" min="0">
+      </div>
+      <div class="lever">
+        <label for="dpo-range">DPO <span class="how">Payment days</span></label>
+        <input type="number" id="dpo-num" step="any" min="0" inputmode="decimal" aria-label="DPO days">
+        <input type="range" id="dpo-range" step="any" min="0">
+      </div>
+
+      <div class="big">
+        <span>Cash conversion cycle</span>
+        <strong id="lever-ccc"></strong>
+        <span class="how" id="lever-ccc-before"></span>
+      </div>
+
+      <table class="num">
+        <thead>
+          <tr><th scope="col">Balance</th><th scope="col">Implied</th><th scope="col">Cash freed</th></tr>
+        </thead>
+        <tbody id="lever-body"></tbody>
+        <tfoot id="lever-foot"></tfoot>
+      </table>
+      <p class="note">Implied balance = days × annual COGS (or revenue) / <span class="days-year"></span>. Cash freed compares it with the Before balance.</p>
+
+      <table class="num results">
+        <tbody>
+          <tr>
+            <th scope="row">Interest saved a year<span class="how">Assumes every freed dollar pays down the bank line, up to its Before balance of <span id="bank-before"></span>, at <span id="bank-rate"></span>. The case's own After balance sheet shows part of the cash was kept, so the real saving can be smaller. A negative number is extra interest on more borrowing.</span></th>
+            <td id="lever-interest"></td>
+          </tr>
+          <tr>
+            <th scope="row">Days paid past the net-<span class="net-days"></span> due date<span class="how">DPO − <span class="net-days"></span>, never less than zero</span></th>
+            <td id="lever-late"></td>
+          </tr>
+          <tr>
+            <th scope="row">Annual cost of skipping the <span id="disc-pct"></span> discount<span class="how">Nominal rate: d / (1 − d) × <span class="days-year"></span> / (DPO − <span id="disc-days"></span>)</span></th>
+            <td id="lever-discount"></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="data-section" hidden>
+      <details>
+        <summary>Numbers read from the CSV files</summary>
+        <table class="num small">
+          <thead>
+            <tr><th scope="col">Line</th><th scope="col">Before</th><th scope="col">After</th></tr>
+          </thead>
+          <tbody id="data-body"></tbody>
+        </table>
+        <p class="note">From <code>data/electromart.csv</code> and <code>data/assumptions.csv</code>.</p>
+      </details>
+    </section>
+  </main>
+
+  <footer>
+    <p>FIN 4150 · Everything runs in your browser. No data leaves this device.</p>
+  </footer>
+
+  <script src="ccc.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
